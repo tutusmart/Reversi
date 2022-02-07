@@ -1,0 +1,126 @@
+html,body {
+  height: 100%;
+}
+* { 
+  margin: 0; 
+  padding: 0; 
+}
+body {
+  background: #f2f2f2;
+}
+#app {
+  position: relative;
+  width: 65%;
+  box-sizing: border-box;
+  margin: 0 auto;
+  height: 70%;
+  padding-top: 50px;
+}
+#app:after{content:'';display:block;padding-top:100%;}
+
+.black {
+  background: #000000;
+}
+.white {
+  background: #ffffff;
+}
+.container {
+  background: #dfc28b;
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  display: flex;
+  flex-wrap: wrap;
+  border: 1px inset #8b8375;
+}
+#box-top {
+  position: absolute;
+  left: 25%;
+  width: 50%;
+  text-align: center;
+  z-index: 100;
+  top: 10px;
+  display: none;
+}
+#setBox {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1;
+  background: #f6f6f6;
+}
+.setting-box {
+  margin: 0 auto;
+  width: 500px;
+  margin-top: 100px;
+  background: rgb(180, 230, 226);
+  padding: 80px 0;
+}
+#message {
+  display: none;
+  max-width: 60%; 
+  min-width: 150px; 
+  padding: 0px 14px; 
+  height: 40px; 
+  color: rgb(255, 255, 255); 
+  line-height: 40px; 
+  text-align: center; 
+  border-radius: 4px; 
+  position: fixed; top: 50%; 
+  left: 50%; 
+  transform: translate(-50%, -50%); 
+  z-index: 999999; 
+  background: rgba(0, 0, 0, 0.7); 
+  font-size: 16px;
+}
+.reset_btn{
+  padding: 4px 7px;
+  border-radius: 5px;
+  color: white;
+  border: 1px solid #bb3b3b;
+  background-color: #bb3b3b;
+}
+label {
+  display: inline-block;
+  width: 150px;
+  text-align: right;
+}
+.wNode8 {
+  width: 12.5%;
+  height: 12.5%;
+}
+.wNode10 {
+  width: 10%;
+  height: 10%;
+}
+.node {
+  border-right: 2px solid #978f8f;
+  border-bottom: 2px solid #978f8f;
+  box-sizing: border-box;
+}
+.node span {
+  display: block;
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+}
+.start-btn {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  width: 200px;
+  background: #333333;
+  color: #fff;
+  margin: 20px auto;
+  border-radius: 5px;
+  padding:4px;
+  cursor: pointer;
+}
+.w200{
+  width: 200px;
+}
+
+
+

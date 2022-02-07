@@ -1,0 +1,57 @@
+<!--
+ * @Author: tuWei
+ * @Date: 2022-02-06 00:10:14
+ * @LastEditors: Please set LastEditors
+ * @LastEditTime: 2022-02-07 10:27:28
+-->
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <link rel="stylesheet" href="./src/css/home.css">
+  <title>黑白棋</title>
+</head>
+<body>
+  <div id="box-top">
+    <button class="reset_btn" onclick="startGame()">重开</button>
+    <button class="reset_btn" onclick="openSet()">设置</button>
+  </div>
+  <div id="app"></div>
+  <div id="setBox">
+    <div class="setting-box">
+      <div>
+        <label>对局颜色：</label>
+        <select class="w200" onchange="changeCor()" name="" id="color">
+          <option value="0">黑色</option>
+          <option value="1">白色</option>
+        </select>
+      </div>
+      <div>
+        <label>游戏模式：</label>
+        <select class="w200" onchange="changeTye()" name="" id="g-type">
+          <option value="0">自我娱乐</option>
+          <option value="1">人机对战</option>
+        </select>
+      </div>
+      <div>
+        <label>棋盘大小：</label>
+        <select class="w200" onchange="changeSize()" name="" id="size">
+          <option value="8">8*8</option>
+          <option value="10">10*10</option>
+        </select>
+      </div>
+      <div>
+        <label>服务器地址：</label>
+        <input class="w200" onchange="changeUrl()" id="url" type="text" name="url" value="http://121.40.233.220:8080">
+      </div>
+      <div class="start-btn" onclick="startGame()">开始游戏</div>
+    </div>
+  </div>
+  <div id="message"></div>
+</body>
+</html>
+<script src="./src/js/game.js"></script>
+<script src="./src/js/http.js"></script>
+<script src="./src/js/index.js"></script>
