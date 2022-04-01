@@ -2,7 +2,7 @@
  * @Author: tuWei
  * @Date: 2022-02-05 23:46:58
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-04-02 00:31:24
+ * @LastEditTime: 2022-04-02 01:05:05
  */
 class Reversi {
   constructor(){
@@ -105,9 +105,6 @@ class Reversi {
         }else if( (x < 5 || x > num - 6) &&  (y < 5 || y > num - 6)){
           //次次差点
           Ele.level = 3;
-        }
-        if(Ele.level !== undefined) {
-          Ele.innerText = Ele.level;
         }
         node.className = className;
       }
@@ -213,6 +210,7 @@ class Reversi {
       var keyList = ['Nl', 'Nr', 'Nt', 'Nb', 'Nlt', 'Nlb', 'Nrt', 'Nrb'];
       keyList.forEach((key)=>{
         let obj = item[key];
+        //获取当前棋子的所有相邻棋子的空节点集合 differentColor
         if(obj && obj.colorType !== this.colorType && obj.colorType !== ''){
           this.getTheSeed(obj[key], key, differentColor);
         }
@@ -383,19 +381,17 @@ class Reversi {
    */
   isGameOver() {
     setTimeout(()=>{
-      var NM = {
-        b: 0, //黑棋数量
-        w: 0  //白旗数量
-      }
+      //黑棋数量 //白旗数量
+      let bNum = 0, wNum = 0; 
       //所有空节点集合
       var Lists = [];
       for (const key in this.Eles) { // 链表连接
         if (this.Eles.hasOwnProperty(key)) {
           const ele = this.Eles[key];
           if (ele.colorType === 0) {
-            NM.b++;
+            bNum++;
           } else if (ele.colorType === 1) {
-            NM.w++;
+            wNum++;
           } else {
             Lists.push(ele);
           }
@@ -412,7 +408,7 @@ class Reversi {
           }
         }
         if (!Flag) {
-          if (NM.b > NM.w) {
+          if (bNum > wNum) {
             this.gameOver = true;
             this.message = '游戏结束，黑棋获胜'
           } else {
@@ -422,7 +418,7 @@ class Reversi {
           this.showMessage(this.message, 10000);
         }
       } else {
-        if (NM.b > NM.w) {
+        if (bNum > wNum) {
           this.gameOver = true;
           this.message = '游戏结束，黑棋获胜'
         } else {
