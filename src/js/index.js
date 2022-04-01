@@ -2,7 +2,7 @@
  * @Author: tuWei
  * @Date: 2022-02-05 23:46:58
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-02-07 10:28:10
+ * @LastEditTime: 2022-04-02 00:12:17
  */
 const R = new Reversi();
 const boxTop = document.querySelector('#box-top');
@@ -31,6 +31,9 @@ function startGame() {
     R.showMessage('请输入服务器地址');
     return;
   }
+  R.colorType = R.sColorType;
+  R.gameOver = '';
+  R.message = '';
   if (R.gameType == 1) {
     Http.post({
       url: R.Url + '/blackandwhite/openGame',

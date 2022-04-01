@@ -2,17 +2,19 @@
  * @Author: tuWei
  * @Date: 2022-02-05 23:46:58
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-02-07 10:22:09
+ * @LastEditTime: 2022-04-02 00:31:24
  */
 class Reversi {
   constructor(){
     // 棋盘对象
     this.checkerboard = null, 
     //链表对象
+    this.gameOver = '';
+    this.message = '';
     this.Eles = {};
     this.sColorType = 0; //游戏模式、人机还是娱乐
     this.colorType = 0; // 当前需要下的棋子、 0黑色、1白色
-    this.gameType = 0; //游戏类型
+    this.gameType = 0; //游戏类型 1.本地娱乐 2.与本地AI娱乐
     this.size = 8; 
     this.gameId = ''; //游戏id
     this.Url = 'http://121.40.233.220:8080';
@@ -26,7 +28,6 @@ class Reversi {
     this.checkerboard.addEventListener('click', function (event) {
       that.evtFn(event, true)
     });
-
     if (this.gameId) {
       Http.post({
         url:  this.Url + '/blackandwhite/chooseColor',
@@ -63,7 +64,7 @@ class Reversi {
         this.Eles[x + '-' + y] = Ele;
         node.appendChild(Ele);
         this.checkerboard.appendChild(node);
-        if (num == 8) { 
+        if (num == 8) {
           className += ' wNode8';
           if ((x == 3 && y == 3) || (x == 4 && y == 4)) {
             Ele.className = 'white';
@@ -83,6 +84,30 @@ class Reversi {
             Ele.className = 'black';
             Ele.colorType = 0;
           }
+        }
+        //level优先等级 
+        //level 0 最高权重
+        //level 1 次优点
+        //level 2 次差点
+        //level 3 次次差点
+        //level 4 最差权重
+        if ((x == 0 || x == num - 1) && (y == 0 || y == num - 1)) {
+          Ele.level = 0;
+        }else if( (x < 2 || x > num - 3) &&  (y < 2 || y > num - 3)){
+          //最差权重
+          Ele.level = 4;
+        }else if( (x < 3 || x > num - 4) &&  (y < 3 || y > num - 4)){
+          //次优点
+          Ele.level = 1;
+        }else if( (x < 4 || x > num - 5) &&  (y < 4 || y > num - 5)){
+          //次差点
+          Ele.level = 2;
+        }else if( (x < 5 || x > num - 6) &&  (y < 5 || y > num - 6)){
+          //次次差点
+          Ele.level = 3;
+        }
+        if(Ele.level !== undefined) {
+          Ele.innerText = Ele.level;
         }
         node.className = className;
       }
@@ -117,11 +142,16 @@ class Reversi {
         ele.Nrb = this.Eles[(x + 1) + '-' + (y + 1)];
       }
     })
+    console.log(this.Eles);
   }
   /**
    * 棋子事件委托
    */
   evtFn(event, flag) {
+    if(this.gameOver && this.message){
+      this.showMessage(this.message, 10000);
+      return;
+    }
     var evt = this.Eles[event.target.x + '-' + event.target.y];
     if (evt) {
       var className = this.canFallingSeed(evt);
@@ -131,6 +161,10 @@ class Reversi {
         evt.className = className;
         evt.colorType = this.colorType;
         this.colorType = this.colorType === 0 ? 1 : 0;
+        //本地ai算法
+        if(this.gameType == 2 && flag){
+          this.localAI();
+        }
         if (this.gameType == 1 && flag) {
           Http.post({
             url: this.Url + '/blackandwhite/putChess',
@@ -157,6 +191,83 @@ class Reversi {
       }
     }
   }
+  //本地ai对局
+  localAI(){
+    //当前需要落子的所以棋子位置集合
+    const Lists = [];
+    //最高权重的所以集合
+    const differentColor = [];
+    //翻转棋子最多的长度
+    const MaxList = [];
+    let maxNum = 0;
+    let levelListIndex = 0;
+    for (const key in this.Eles) {
+      if (this.Eles.hasOwnProperty(key)) {
+        const ele = this.Eles[key];
+        if (ele.colorType === this.colorType) {
+          Lists.push(ele)
+        }
+      }
+    }
+    Lists.forEach((item)=>{
+      var keyList = ['Nl', 'Nr', 'Nt', 'Nb', 'Nlt', 'Nlb', 'Nrt', 'Nrb'];
+      keyList.forEach((key)=>{
+        let obj = item[key];
+        if(obj && obj.colorType !== this.colorType && obj.colorType !== ''){
+          this.getTheSeed(obj[key], key, differentColor);
+        }
+      })
+    })
+    let levelLists = this.getDifferentColorLevel(differentColor);
+    if(levelLists.length === 0){
+      this.showMessage('没有可以下的棋子, ' + this.colorType === 0 ? '白棋获胜' : '黑棋获胜');
+      return
+    }
+    //匹配翻转的棋子最多的落法
+    levelLists.forEach((item,index)=>{
+      let evt = this.Eles[item.x + '-' + item.y]
+      this.checkDates(evt, true, MaxList);
+      if(maxNum < MaxList.length){
+        maxNum = MaxList.length;
+        levelListIndex = index;
+      }
+    })
+    this.evtFn({target: levelLists[levelListIndex]});
+  }
+  //获取level权重最高的棋子集合
+  getDifferentColorLevel(differentColor){
+    var level = 5;
+    let levelLists = [];
+    differentColor.forEach((item)=>{
+      if(item.level < level){
+        level = item.level;
+      }
+    })
+    differentColor.forEach((item)=>{
+      if(item.level === level){
+        levelLists.push(item);
+      }
+    })
+    return levelLists;
+  }
+  //获取ai落子的所有集合点
+  getTheSeed(obj, key, differentColor) {
+    //结束寻找落子点
+    if (obj.colorType === '') {
+      let flag = differentColor.find((v)=>{ 
+        if( v.x == obj.x && v.y == obj.y){
+          return v
+        }
+      })
+      if(!flag){
+        differentColor.push(obj);
+      }
+      return;
+    }
+    if (obj[key] && obj.colorType !== this.colorType) {
+      this.getTheSeed(obj[key], key, differentColor);
+    }
+  }
   /***
    * 创建节点Ele节点
    * 8个方向节点创关联节点
@@ -179,15 +290,19 @@ class Reversi {
   /**
    * 翻转棋子
    */
-  flip(obj, key) {
+  flip(obj, key, listReversal) {
     //翻转结束递归
     if (obj.colorType == this.colorType) {
       return;
     }
-    obj.colorType = this.colorType;
-    obj.className = this.colorType == 0 ? 'black' : 'white';
+    if(listReversal) {
+      listReversal.push(obj);
+    }else{
+      obj.colorType = this.colorType;
+      obj.className = this.colorType == 0 ? 'black' : 'white';
+    }
     if (obj[key]) {
-      this.flip(obj[key], key);
+      this.flip(obj[key], key, listReversal);
     }
   }
   /**
@@ -202,16 +317,16 @@ class Reversi {
       this.getEleColorType(obj[key], key, Array);
     }
   }
-
   /**
    * obj 点击的节点 链表数据
    * * 是否可以落棋 需要判断棋子八个方向是否符合条件
    * isReversal 是否需要反转
+   * listReversal 翻转的集合记录
    */
-  checkDates (obj, isReversal) {
+  checkDates (obj, isReversal, listReversal) {
     var keyList = ['Nl', 'Nr', 'Nt', 'Nb', 'Nlt', 'Nlb', 'Nrt', 'Nrb'];
     //所有方向满足或不满足的所有情况
-    var Flag = true;
+    var flag = true;
     for (let index = 0; index < keyList.length; index++) {
       //key表示每一个方向
       const key = keyList[index];
@@ -220,13 +335,13 @@ class Reversi {
       this.getEleColorType(obj, key, Array);
       //this.colorType 是当前要落子的颜色;
       if (Array.indexOf(this.colorType) > 0 && (Array.indexOf('') > Array.indexOf(this.colorType) || Array.indexOf('') === -1)) {
-        Flag = false;
+        flag = false;
         if (isReversal) {
-          this.flip(obj[key], key);
+          this.flip(obj[key], key, listReversal);
         }
       }
     }
-    return Flag;
+    return flag;
   }
   /**
    * 
@@ -298,17 +413,23 @@ class Reversi {
         }
         if (!Flag) {
           if (NM.b > NM.w) {
-            this.showMessage('黑棋获胜', 10000);
+            this.gameOver = true;
+            this.message = '游戏结束，黑棋获胜'
           } else {
-            this.showMessage('白棋获胜', 10000);
+            this.gameOver = true;
+            this.message = '游戏结束，白棋获胜'
           }
+          this.showMessage(this.message, 10000);
         }
       } else {
         if (NM.b > NM.w) {
-          this.showMessage('黑棋获胜', 10000);
+          this.gameOver = true;
+          this.message = '游戏结束，黑棋获胜'
         } else {
-          this.showMessage('白棋获胜', 10000);
+          this.gameOver = true;
+          this.message = '游戏结束，白棋获胜'
         }
+        this.showMessage(this.message, 10000);
       }
     },10)
   }

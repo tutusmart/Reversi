@@ -2,7 +2,7 @@
  * @Author: tuWei
  * @Date: 2022-02-05 22:36:22
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-02-06 22:36:23
+ * @LastEditTime: 2022-04-01 13:30:17
  */
 /**
  * 封装http请求
@@ -26,10 +26,10 @@
           if (res.opFlag) {
             options.success(res.serviceResult || {});
           } else {
-            this.showMessage('服务异常');
+            alert('服务异常');
           }
         } else {
-          this.showMessage('服务异常');
+          alert('服务异常');
           if(options.error){
             options.error(http);
           }
