@@ -2,7 +2,7 @@
  * @Author: tuWei
  * @Date: 2022-02-05 23:46:58
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-04-02 00:12:17
+ * @LastEditTime: 2022-04-07 17:19:27
  */
 const R = new Reversi();
 const boxTop = document.querySelector('#box-top');
@@ -27,14 +27,14 @@ function changeSize() {
   R.size = size.value - 0;
 }
 function startGame() {
-  if (R.gameType == 1 && !R.Url) {
+  if (R.gameType === 1 && !R.Url) {
     R.showMessage('请输入服务器地址');
     return;
   }
   R.colorType = R.sColorType;
   R.gameOver = '';
   R.message = '';
-  if (R.gameType == 1) {
+  if (R.gameType === 1) {
     Http.post({
       url: R.Url + '/blackandwhite/openGame',
       type: 'POST',
@@ -42,14 +42,14 @@ function startGame() {
         dimension: R.size - 0,
         gameType: 1
       },
-      success: (res) => {
+      success: res => {
         setBox.style.display = 'none';
         boxTop.style.display = 'block';
         //获取游戏id
         R.gameId = res.data ? res.data.gameId : '';
         R.initReversi();
       },
-      error: () => {},
+      error: () => {}
     });
   } else {
     setBox.style.display = 'none';
