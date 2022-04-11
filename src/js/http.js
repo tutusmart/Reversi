@@ -2,19 +2,19 @@
  * @Author: tuWei
  * @Date: 2022-02-05 22:36:22
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-04-07 17:18:37
+ * @LastEditTime: 2022-04-08 10:40:03
  */
 /**
  * 封装http请求
  */
 class Http {
   static post(options) {
-    var http = new XMLHttpRequest() || new ActiveXObject('Microsoft.XMLHTTP');
-    var { type, data, url } = options;
+    var http = new XMLHttpRequest() || new ActiveXObject('Microsoft.XMLHTTP'),
+      { type, data, url } = options;
     const args = {
       param: data,
       ip: '',
-      sid: ''
+      sid: '',
     };
     http.open(type, url, true);
     http.setRequestHeader('Content-type', 'application/json;charset=UTF-8');

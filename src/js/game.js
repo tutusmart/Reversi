@@ -2,7 +2,7 @@
  * @Author: tuWei
  * @Date: 2022-02-05 23:46:58
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-04-07 17:24:09
+ * @LastEditTime: 2022-04-08 11:08:15
  */
 class Reversi {
   constructor() {
@@ -33,14 +33,14 @@ class Reversi {
         type: 'POST',
         data: {
           colorType: this.sColorType,
-          gameId: this.gameId
+          gameId: this.gameId,
         },
         success: res => {
           if (res.data && res.data.firstChess) {
             var data = res.data.firstChess;
             this.evtFn({ target: data });
           }
-        }
+        },
       });
     }
   }
@@ -56,30 +56,30 @@ class Reversi {
     app.appendChild(this.checkerboard);
     for (let x = 0; x < num; x++) {
       for (let y = 0; y < num; y++) {
-        var className = 'node';
-        var node = document.createElement('div');
-        //创建节点方法
-        var Ele = this.createLEle(x, y);
+        var className = 'node',
+          node = document.createElement('div'),
+          //创建节点方法
+          Ele = this.createLEle(x, y);
         this.Eles[x + '-' + y] = Ele;
         node.appendChild(Ele);
         this.checkerboard.appendChild(node);
         if (num === 8) {
           className += ' wNode8';
-          if (x === 3 && y === 3 || x === 4 && y === 4) {
+          if ((x === 3 && y === 3) || (x === 4 && y === 4)) {
             Ele.className = 'white';
             Ele.colorType = 1;
           }
-          if (x === 3 && y === 4 || x === 4 && y === 3) {
+          if ((x === 3 && y === 4) || (x === 4 && y === 3)) {
             Ele.className = 'black';
             Ele.colorType = 0;
           }
         } else if (num === 10) {
           className += ' wNode10';
-          if (x === 4 && y ===4 || x === 5 && y === 5 ) {
+          if ((x === 4 && y === 4) || (x === 5 && y === 5)) {
             Ele.className = 'white';
             Ele.colorType = 1;
           }
-          if (x === 4 && y === 5 || x === 5 && y === 4 ) {
+          if ((x === 4 && y === 5) || (x === 5 && y === 4)) {
             Ele.className = 'black';
             Ele.colorType = 0;
           }
@@ -113,9 +113,9 @@ class Reversi {
     }
     //连接链表
     Object.keys(this.Eles).forEach(key => {
-      var x = Number(key.split('-')[0]);
-      var y = Number(key.split('-')[1]);
-      var ele = this.Eles[key];
+      var x = Number(key.split('-')[0]),
+        y = Number(key.split('-')[1]),
+        ele = this.Eles[key];
       if (y - 1 > -1) {
         ele.Nl = this.Eles[x + '-' + (y - 1)];
       }
@@ -172,15 +172,15 @@ class Reversi {
               chess: {
                 colorType: this.sColorType,
                 x: evt.x,
-                y: evt.y
-              }
+                y: evt.y,
+              },
             },
             success: res => {
               if (res.data && res.data.computerResponseChess) {
                 var data = res.data.computerResponseChess;
                 this.evtFn({ target: data });
               }
-            }
+            },
           });
         }
         this.isGameOver();
@@ -192,13 +192,13 @@ class Reversi {
   //本地ai对局
   localAI() {
     //当前需要落子的所以棋子位置集合
-    const Lists = [];
-    //最高权重的所以集合
-    const differentColor = new Set();
-    //翻转棋子最多的长度
-    const MaxList = [];
-    let maxNum = 0;
-    let levelListIndex = 0;
+    const Lists = [],
+      //最高权重的所以集合
+      differentColor = new Set(),
+      //翻转棋子最多的长度
+      MaxList = [];
+    let maxNum = 0,
+      levelListIndex = 0;
     for (const key in this.Eles) {
       if (Object.prototype.hasOwnProperty.call(this.Eles, key)) {
         const ele = this.Eles[key];
@@ -324,9 +324,9 @@ class Reversi {
    * listReversal 翻转的集合记录
    */
   checkDates(obj, isReversal, listReversal) {
-    var keyList = ['Nl', 'Nr', 'Nt', 'Nb', 'Nlt', 'Nlb', 'Nrt', 'Nrb'];
-    //所有方向满足或不满足的所有情况
-    var flag = true;
+    var keyList = ['Nl', 'Nr', 'Nt', 'Nb', 'Nlt', 'Nlb', 'Nrt', 'Nrb'],
+      //所有方向满足或不满足的所有情况
+      flag = true;
     for (let index = 0; index < keyList.length; index++) {
       //key表示每一个方向
       const key = keyList[index];

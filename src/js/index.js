@@ -2,13 +2,13 @@
  * @Author: tuWei
  * @Date: 2022-02-05 23:46:58
  * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-04-07 17:19:27
+ * @LastEditTime: 2022-04-08 11:03:33
  */
-const R = new Reversi();
-const boxTop = document.querySelector('#box-top');
-const Url = document.querySelector('#url');
-const gType = document.querySelector('#g-type');
-const size = document.querySelector('#size');
+const R = new Reversi(),
+  boxTop = document.querySelector('#box-top'),
+  Url = document.querySelector('#url'),
+  gType = document.querySelector('#g-type'),
+  size = document.querySelector('#size');
 
 function openSet() {
   setBox.style.display = 'block';
@@ -40,7 +40,7 @@ function startGame() {
       type: 'POST',
       data: {
         dimension: R.size - 0,
-        gameType: 1
+        gameType: 1,
       },
       success: res => {
         setBox.style.display = 'none';
@@ -49,7 +49,7 @@ function startGame() {
         R.gameId = res.data ? res.data.gameId : '';
         R.initReversi();
       },
-      error: () => {}
+      error: () => {},
     });
   } else {
     setBox.style.display = 'none';
