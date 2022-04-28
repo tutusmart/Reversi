@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        td {
+            width: 20px;
+            height: 20px;
+            border: 1px solid red;
+        }
+
+        .bgRed {
+            background-color: red;
+        }
+        .bgGreen {
+            background-color: #990000;
+        }
+    </style>
+</head>
+<body>
+    <table>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+        <tr>
+            <td></td>
+            <td></td>
+            <td></td>
+            <td></td>
+        </tr>
+    </table>
+    <script>
+        let tdList = document.querySelectorAll("td");
+        for(let i = 0;i<tdList.length;i++){
+            tdList[i].onclick = function(){
+                if(this.className){
+                    this.className = "bgGreen";
+                }else{
+                    this.className = "bgRed";
+                }
+                
+            }
+        }
+    </script>
+</body>
+</html>

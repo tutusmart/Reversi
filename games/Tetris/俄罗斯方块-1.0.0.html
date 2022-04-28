@@ -1,0 +1,277 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        td {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #999;
+        }
+
+        .bgRed {
+            background-color: red;
+        }
+
+        .bgGreen {
+            background-color: #666;
+        }
+    </style>
+    <h1 id="totalScore"></h1>
+    <table></table>
+    <button id="left">左移动</button>
+    <button id="right">右移动</button>
+    <button id="transform">变形</button>
+    <button id="down">下降</button>
+    <script>
+        /* 1.0.0说明，重写变形方法 */
+        let t;
+        class A {
+            status = 0 //形态
+            position = null; //当前形态的坐标
+            positionList = null; //保存所有形态的坐标
+            constructor(origin) { //初始化icon
+                this.setPositionList(origin);
+                this.position = this.positionList[0]; // 初始化是形态1
+            }
+            // 通过原点左边，设置所有形态的坐标
+            setPositionList({top,left}) {
+                this.positionList = [
+                    [
+                        { top: top - 1, left: left - 1 },
+                        { top: top - 1, left: left },
+                        { top: top, left: left },
+                        { top: top + 1, left: left },
+                    ],
+                    [
+                        { top: top - 1, left: left + 1 },
+                        { top: top, left: left + 1 },
+                        { top: top, left: left },
+                        { top: top, left: left - 1 },
+                    ],
+                    [
+                        { top: top + 1, left: left + 1 },
+                        { top: top + 1, left: left },
+                        { top: top, left: left },
+                        { top: top - 1, left: left },
+                    ],
+                    [
+                        { top: top + 1, left: left - 1 },
+                        { top: top, left: left - 1 },
+                        { top: top, left: left },
+                        { top: top, left: left + 1 },
+                    ]
+                    
+                ]
+            }
+            
+            // 通过status设置icon的位置
+            setPosition(status){
+                this.status = status;
+                this.position = this.positionList[status];
+            }
+            // 获取原点
+            getOrigin() {
+                return this.position[2];
+            }
+            // 变形
+            transform() {
+                this.status++; //状态 + 1，准备切换到下一个状态
+                this.status = this.status == this.positionList.length?0:this.status
+                let newIcon = new this.constructor(this.getOrigin());
+                newIcon.setPosition(this.status);
+                return newIcon
+            }
+        }
+        // 获取DOM元素，绑定事件
+        let totalScoreEl = document.querySelector("#totalScore");
+        let table = document.querySelector("table");
+        document.querySelector("#left").onclick = function () {
+            game.left();
+        };
+        document.querySelector("#right").onclick = function () {
+            game.right();
+        };
+        document.querySelector("#transform").onclick = function () {
+            game.transform()
+        };
+        document.querySelector("#down").onclick = function () {
+            game.down();
+        };
+        //游戏对象，渲染，清除等一系列方法和数据
+        let game = {
+            _icon: null, //移动或变形之前的icon对象
+            icon_: null, //移动或变形之后的icon对象
+            totalScore: 0, //总分
+            classX: null, //随机生成的类名，用来随机生成icon
+            data: [ //数据集合
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+            ],
+            render() { //把数据和积分渲染到页面上
+                totalScoreEl.innerHTML = this.totalScore;
+                table.innerHTML = "";
+                this.data.map(v => {
+                    let tr = document.createElement("tr");
+                    table.appendChild(tr);
+                    v.map(v => {
+                        let td = document.createElement("td");
+                        tr.appendChild(td);
+                        if (v.state === 1) {
+                            td.className = "bgRed"
+                        } else if (v.state === 2) {
+                            td.className = "bgGreen"
+                        }
+                    })
+                })
+            },
+            showIcon(icon) { //将icon同步到数据结合中
+                icon.position.map(v => {
+                    let y = v.top;
+                    let x = v.left;
+                    this.data[y][x].state = 1;
+                })
+            },
+            // 移动和变形时，清除前一个icon的坐标
+            clearIcon(icon) {
+                icon.position.map(v => {
+                    let y = v.top;
+                    let x = v.left;
+                    this.data[y][x].state = 0;
+                })
+            },
+            // 设置icon到达底部，颜色改变
+            setBottom(icon) {
+                icon.position.map(v => {
+                    let y = v.top;
+                    let x = v.left;
+                    this.data[y][x].state = 2;
+                })
+            },
+            iconClassList: [A], //存放icon类，多个icon可以随机生成
+            // icon初始化
+            init() {
+                let n = Math.floor(Math.random() * this.iconClassList.length);
+                this.classX = this.iconClassList[n];
+                this._icon = new this.classX({ top: 1, left: 5 });
+                if (this.checkTouch(this._icon)) {
+                    alert(`游戏结束，您的总分为${this.totalScore}`)
+                    clearInterval(t);
+                }
+                this.showIcon(this._icon);
+                this.render();
+            },
+            // 移动，to是方向
+            move(to) {
+                let y, x;
+                switch (to) {
+                    case "left": y = 0; x = -1; break;
+                    case "right": y = 0; x = 1; break;
+                    case "down": y = 1; x = 0; break;
+                }
+                let origin = this._icon.getOrigin();
+                let newOrigin = {
+                    top: origin.top + y,
+                    left: origin.left + x
+                }
+                this.icon_ = new this.classX(newOrigin);
+                this.icon_.setPosition(this._icon.status);//同步新生成的icon状态
+                if (this.checkTouch(this.icon_)) {
+                    if (to === "down") {
+                        this.nextTick()
+                    }
+                } else {
+                    this.clearIcon(this._icon);
+                    this._icon = this.icon_;
+                    this.showIcon(this._icon);
+                    this.render();
+                }
+            },
+            // 变形
+            transform() {
+                this.icon_ = this._icon.transform();
+                if (!this.checkTouch(this.icon_)) {
+                    this.clearIcon(this._icon);
+                    this._icon = this.icon_;
+                    this.classX = this._icon.constructor;
+                    this.showIcon(this._icon);
+                    this.render();
+                }
+
+            },
+            left() {
+                this.move("left");
+            },
+            right() {
+                this.move("right");
+            },
+            down() {
+                this.move("down");
+            },
+            // 是否触碰边界或体积碰撞
+            checkTouch(icon) {
+                let flag = false;
+                icon.position.map(v => {
+                    if (v.top > 11 || v.left < 0 || v.left > 9) {
+                        flag = true;
+                    } else if (this.data[v.top][v.left] && this.data[v.top][v.left].state === 2) {
+                        flag = true;
+                    }
+                })
+                return flag;
+            },
+            // 当前icon落地，生成下一个。
+            nextTick() {
+                this.setBottom(this._icon);
+                this.score();
+                this.init();
+            },
+            // 消除与得分
+            score() {
+                let list = [];
+                for (let i = 0; i < this.data.length; i++) {
+                    for (let j = 0; j < this.data[i].length; j++) {
+                        if (this.data[i][j].state !== 2) {
+                            break;
+                        }
+                        if (j === this.data[i].length - 1) {
+                            list.push(i)
+                        }
+
+                    }
+                };
+                list.map(v => {
+                    this.data.splice(v, 1);
+                    this.data.unshift([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}])
+                    this.totalScore++;
+                })
+            }
+        }
+        // 开始游戏
+        game.init();
+        // 自动下降
+        t = setInterval(() => {
+            game.down();
+        }, 800)
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

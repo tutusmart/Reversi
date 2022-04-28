@@ -1,0 +1,284 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        td {
+            width: 20px;
+            height: 20px;
+            border: 1px solid #999;
+        }
+
+        .bgRed {
+            background-color: red;
+        }
+
+        .bgGreen {
+            background-color: #666;
+        }
+    </style>
+    <h1 id="totalScore"></h1>
+    <table></table>
+    <button id="left">左移动</button>
+    <button id="right">右移动</button>
+    <button id="transform">变形</button>
+    <button id="down">下降</button>
+    <script>
+        let t;
+        class A {
+            position = null;
+            constructor({ top, left }) {
+                this.position = [
+                    { top: top - 1, left: left - 1 },
+                    { top: top - 1, left: left },
+                    { top: top, left: left },
+                    { top: top + 1, left: left },
+                ]
+            }
+            getOrigin() {
+                return this.position[2];
+            }
+        }
+        class B {
+            position = null;
+            constructor({ top, left }) {
+                this.position = [
+                    { top: top - 1, left: left + 1 },
+                    { top: top, left: left + 1 },
+                    { top: top, left: left },
+                    { top: top, left: left - 1 },
+                ]
+            }
+            getOrigin() {
+                return this.position[2];
+            }
+        }
+        class C {
+            position = null;
+            constructor({ top, left }) {
+                this.position = [
+                    { top: top + 1, left: left + 1 },
+                    { top: top + 1, left: left },
+                    { top: top, left: left },
+                    { top: top - 1, left: left },
+                ]
+            }
+            getOrigin() {
+                return this.position[2];
+            }
+        }
+        class D {
+            position = null;
+            constructor({ top, left }) {
+                this.position = [
+                    { top: top + 1, left: left - 1 },
+                    { top: top, left: left - 1 },
+                    { top: top, left: left },
+                    { top: top, left: left + 1 },
+                ]
+            }
+            getOrigin() {
+                return this.position[2];
+            }
+        }
+        let totalScoreEl = document.querySelector("#totalScore");
+        let table = document.querySelector("table");
+        document.querySelector("#left").onclick = function () {
+            game.left();
+        };
+        document.querySelector("#right").onclick = function () {
+            game.right();
+        };
+        document.querySelector("#transform").onclick = function () {
+            game.transform()
+        };
+        document.querySelector("#down").onclick = function () {
+            game.down();
+        };
+        //游戏对象，渲染，清除等一系列方法和数据
+        let game = {
+            _icon: null,
+            icon_: null,
+            totalScore: 0,
+            classX: null,
+            data: [
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}],
+                [{}, {}, {}, {}, {}, {}, {}, {}, {}, {}]
+            ],
+            render() {
+                totalScoreEl.innerHTML = this.totalScore;
+                table.innerHTML = "";
+                this.data.map(v => {
+                    let tr = document.createElement("tr");
+                    table.appendChild(tr);
+                    v.map(v => {
+                        let td = document.createElement("td");
+                        tr.appendChild(td);
+                        if (v.state === 1) {
+                            td.className = "bgRed"
+                        } else if (v.state === 2) {
+                            td.className = "bgGreen"
+                        }
+                    })
+                })
+            },
+            showIcon(icon) {
+                icon.position.map(v => {
+                    let y = v.top;
+                    let x = v.left;
+                    this.data[y][x].state = 1;
+                })
+            },
+            clearIcon(icon) {
+                icon.position.map(v => {
+                    let y = v.top;
+                    let x = v.left;
+                    this.data[y][x].state = 0;
+                })
+            },
+            setBottom(icon) {
+                icon.position.map(v => {
+                    let y = v.top;
+                    let x = v.left;
+                    this.data[y][x].state = 2;
+                })
+            },
+            iconClassList: [A, B, C, D],
+            init() {
+                let n = Math.floor(Math.random() * this.iconClassList.length);
+                this.classX = this.iconClassList[n];
+                this._icon = new this.classX({ top: 1, left: 5 });
+                if (this.checkTouch(this._icon)) {
+                    alert(`游戏结束，您的总分为${this.totalScore}`)
+                    clearInterval(t);
+                }
+                this.showIcon(this._icon);
+                this.render();
+            },
+            move(to) {
+                let y, x;
+                switch (to) {
+                    case "left": y = 0; x = -1; break;
+                    case "right": y = 0; x = 1; break;
+                    case "down": y = 1; x = 0; break;
+                }
+                let origin = this._icon.getOrigin();
+                let newOrigin = {
+                    top: origin.top + y,
+                    left: origin.left + x
+                }
+                this.icon_ = new this.classX(newOrigin);
+                if (this.checkTouch(this.icon_)) {
+                    if(to === "down"){
+                        this.nextTick()
+                    }
+                } else{
+                    this.clearIcon(this._icon);
+                    this._icon = this.icon_;
+                    this.showIcon(this._icon);
+                    this.render();
+                }
+            },
+            transform() {
+                let name = this._icon.constructor.name;
+                switch (name) {
+                    case "A": {
+                        this.icon_ = new B(this._icon.getOrigin());
+                  
+                    }; break;
+                    case "B": {
+                        this.icon_ = new C(this._icon.getOrigin())
+                   
+                    }; break;
+                    case "C": {
+                        this.icon_ = new D(this._icon.getOrigin())
+                       
+                    }; break;
+                    case "D": {
+                        this.icon_ = new A(this._icon.getOrigin())
+                       
+                    }; break;
+                }
+                if (!this.checkTouch(this.icon_) ) {
+                    this.clearIcon(this._icon);
+                    this._icon = this.icon_;
+                    this.classX = this._icon.constructor;
+                    this.showIcon(this._icon);
+                    this.render();
+                }
+
+            },
+            left() {
+                this.move("left");
+            },
+            right() {
+                this.move("right");
+            },
+            down() {
+                this.move("down");
+            },
+            // 是否落地
+            checkTouch(icon) {
+                let flag = false;
+                icon.position.map(v => {
+                    if (v.top > 11 || v.left < 0 || v.left > 9) {
+                        flag = true;
+                    } else if (this.data[v.top][v.left] && this.data[v.top][v.left].state === 2) {
+                        flag = true;
+                    }
+                })
+                return flag;
+            },
+            // 下一轮游戏
+            nextTick() {
+                this.setBottom(this._icon);
+                this.score();
+                this.init();
+            },
+            score() {
+                let list = [];
+                for (let i = 0; i < this.data.length; i++) {
+                    for (let j = 0; j < this.data[i].length; j++) {
+                        if (this.data[i][j].state !== 2) {
+                            break;
+                        }
+                        if (j === this.data[i].length - 1) {
+                            list.push(i)
+                        }
+
+                    }
+                };
+                list.map(v => {
+                    this.data.splice(v, 1);
+                    this.data.unshift([{}, {}, {}, {}, {}, {}, {}, {}, {}, {}])
+                    this.totalScore++;
+                })
+            }
+        }
+
+        game.init();
+        t = setInterval(() => {
+            game.down();
+        },800)
+    </script>
+</head>
+
+<body>
+
+</body>
+
+</html>

@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+    <style>
+        td{
+            width: 20px;
+            height: 20px;
+            border:1px solid #666;
+        }
+        .bgRed{
+            background-color: red;
+        }
+        .bg{
+            background-color: #999;
+        }
+    </style>
+</head>
+<body>
+    <table></table>
+    <button id="down">向下</button>
+    <script>
+        class A {
+            // origin是原点，结构是{top:x,left:y}
+            constructor(origin){
+                let top = origin.top;
+                let left = origin.left
+                this.position = [
+                    {top:top-1,left:left-1},
+                    {top:top-1,left:left},
+                    {top:top,left:left},
+                    {top:top+1,left:left},
+                ]
+            }
+            getOrigin(){
+                return this.position[2];
+            }
+            
+        }
+        let data = [
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+            [{},{},{},{},{},{},{},{},{},{}],
+        ]
+        let table = document.querySelector("table")
+        // for forin map
+        function render(){
+            table.innerHTML = "";
+            data.map( v => {
+            let tr = document.createElement("tr");
+            v.map( v=> {
+                let td = document.createElement("td")
+                if(v.state === 1){
+                    td.className = "bgRed"
+                }if(v.state === 2){
+                    td.className = "bg"
+                }
+                tr.appendChild(td);
+                })
+                table.appendChild(tr);
+            })
+        }
+        let _icon = null;
+        function init(){
+            _icon = new A({top:1,left:5});
+            showIcon(_icon);
+            render();
+        }
+        init();
+        let icon_ = null;
+        function showIcon(icon){
+            icon.position.map( v => {
+                let top = v.top;
+                let left = v.left;
+                data[top][left].state = 1;
+            })
+        }
+        
+        // 清空之前icon
+        function clearIcon(icon){
+            icon.position.map( v => {
+                let top = v.top;
+                let left = v.left;
+                data[top][left].state = 0;
+            })
+        }
+        // 处理边界
+        function checkTouch(icon){
+            let flag = false;
+            icon.position.map( v=> {
+                let top = v.top;
+                let left = v.left;
+                if(top > 11 || left < 0 || left > 9){
+                    flag = true;
+                }else if(data[top][left].state === 2){
+                    flag = true;
+                }
+            })
+            return flag
+        }
+        // 下一轮图标
+        function nextTick(){
+            _icon.position.map(v=> {
+                let top = v.top;
+                let left = v.left;
+                data[top][left].state = 2;
+            })
+            init();
+        }
+        function down(){
+            let origin = _icon.getOrigin();
+            let newOrigin = {
+                top:origin.top + 1,
+                left:origin.left
+            }
+            icon_ = new A(newOrigin);
+            if(checkTouch(icon_)){
+                nextTick();
+            }else{
+                clearIcon(_icon);
+                _icon = icon_;
+                showIcon(_icon);
+                render();
+            }
+        }
+        document.querySelector("#down").onclick = down;
+    </script>
+</body>
+</html>
