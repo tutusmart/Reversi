@@ -1,16 +1,18 @@
 /*
  * @Author: tuWei
  * @Date: 2022-02-05 23:46:58
- * @LastEditors: Please set LastEditors
- * @LastEditTime: 2022-04-08 11:08:15
+ * @LastEditors: tuWei
+ * @LastEditTime: 2022-10-12 00:23:43
  */
+let ws = null;
 class Reversi {
   constructor() {
-    // 棋盘对象
-    this.checkerboard = null;
+    this.checkerboard = null; // 棋盘对象
     this.gameOver = '';
     this.message = '';
-    this.Eles = {};
+    this.isDouble = false;
+    this.doublePs = '';
+    this.Eles = null;
     this.sColorType = 0; //游戏模式、人机还是娱乐
     this.colorType = 0; // 当前需要下的棋子、 0黑色、1白色
     this.gameType = 0; //游戏类型 1.本地娱乐 2.与本地AI娱乐
@@ -19,10 +21,74 @@ class Reversi {
     this.Url = 'http://121.40.233.220:8080';
   }
   /**
+   * 
+   * @param {that} 棋盘对象数据 
+   * 发送ws通信数据
+   */
+  sendWs(that){
+    let data = {...that };
+    if(data.Eles){
+      Object.keys(data.Eles).forEach(key => {
+        let ele =  {};
+        ele.x =  data.Eles[key].x;
+        ele.y =  data.Eles[key].y;
+        ele.level =  data.Eles[key].level;
+        ele.colorType = data.Eles[key].colorType;
+        if(ele.colorType === 1){
+          ele.className =  'white';
+        }else if(ele.colorType === 0){
+          ele.className =  'black';
+        }
+        ele.Nl = '';
+        ele.Nr = '';
+        ele.Nt = '';
+        ele.Nb = '';
+        ele.Nlt = '';
+        ele.Nlb = '';
+        ele.Nrt = '';
+        ele.Nrb = '';
+        data.Eles[key] = ele;
+      })
+    }
+    ws.send( JSON.stringify(data));
+  }
+  /**
    * 初始化棋盘
    */
   initReversi() {
     var that = this;
+    if(this.isDouble){
+      //服务端向客户端连接执行
+      ws = new WebSocket("ws://localhost:9009");
+      ws.onopen = function() {
+        console.log('连接建立');
+        console.log(that);
+        that.sendWs(that);
+      }
+      ws.onmessage = function (evt) {
+        if(evt.data){
+          const data = JSON.parse(evt.data);
+          console.log(data);
+          if(data.size){
+            setBox.style.display = 'none';
+            boxTop.style.display = 'block';
+            that.remoteCommunication(data)
+          }else{
+            setBox.style.display = 'block';
+            boxTop.style.display = 'none';
+          }
+        }
+      };    
+
+      ws.onclose = function() {    
+        console.log('Closed');
+      };  
+      ws.onerror = function(err) {    
+        alert("Error: 连接失败" + err);    
+      };
+      return;
+    }
+    this.currentHouse();
     this.createChess(this.size);
     this.checkerboard.addEventListener('click', function (event) {
       that.evtFn(event, true);
@@ -46,25 +112,32 @@ class Reversi {
   }
   /**
    * 创建棋盘
+   * type 为undenfind表示初始化棋盘 存在表示渲染
    */
-  createChess(num) {
+  createChess(num, eles) {
+    eles ? this.Eles = eles : this.Eles = {};
     this.checkerboard = document.createElement('div');
     this.checkerboard.className = 'container';
     var app = document.querySelector('#app');
     app.innerHTML = '';
-    this.Eles = {};
     app.appendChild(this.checkerboard);
     for (let x = 0; x < num; x++) {
       for (let y = 0; y < num; y++) {
-        var className = 'node',
-          node = document.createElement('div'),
-          //创建节点方法
-          Ele = this.createLEle(x, y);
-        this.Eles[x + '-' + y] = Ele;
+        var className = 'node wNode' + num;
+        var node = document.createElement('div');
+        var Ele = null;
+        //创建节点方法
+        if(!eles){
+          Ele = this.createLEle({x, y});
+          this.Eles[x + '-' + y] = Ele;
+        }else{
+          // Ele = this.Eles[x + '-' + y];
+          let ele = this.Eles[x + '-' + y];
+          Ele = this.createLEle(ele);
+        }
         node.appendChild(Ele);
         this.checkerboard.appendChild(node);
-        if (num === 8) {
-          className += ' wNode8';
+        if (num === 8 && !eles) {
           if ((x === 3 && y === 3) || (x === 4 && y === 4)) {
             Ele.className = 'white';
             Ele.colorType = 1;
@@ -73,8 +146,7 @@ class Reversi {
             Ele.className = 'black';
             Ele.colorType = 0;
           }
-        } else if (num === 10) {
-          className += ' wNode10';
+        } else if (num === 10 && !eles) {
           if ((x === 4 && y === 4) || (x === 5 && y === 5)) {
             Ele.className = 'white';
             Ele.colorType = 1;
@@ -143,6 +215,29 @@ class Reversi {
     });
   }
   /**
+  *
+  *
+  */
+  remoteCommunication(els){
+    var that = this;
+    this.doublePs = els.doublePs;
+    this.Url = els.Url;
+    this.gameId = els.gameId;
+    this.gameOver = els.gameOver;
+    this.gameType = els.gameType;
+    this.isDouble = els.isDouble;
+    this.message = els.message;
+    this.sColorType = els.sColorType;
+    this.colorType = els.colorType;
+    this.size = els.size;
+    this.createChess(els.size, els.Eles);
+    this.currentHouse();
+    this.checkerboard.addEventListener('click', function (event) {
+      that.evtFn(event, true);
+    });
+  }
+
+  /**
    * 棋子事件委托
    */
   evtFn(event, flag) {
@@ -159,6 +254,7 @@ class Reversi {
         evt.className = className;
         evt.colorType = this.colorType;
         this.colorType = this.colorType === 0 ? 1 : 0;
+        this.sendWs(this);
         //本地ai算法
         if (this.gameType === 2 && flag) {
           this.localAI();
@@ -185,10 +281,25 @@ class Reversi {
         }
         this.isGameOver();
       } else {
-        this.showMessage('不可下在此处');
+        let textMsg = '';
+        if(this.colorType){
+          textMsg = '白棋'
+        }else{
+          textMsg = '黑棋';
+        }
+        this.showMessage(textMsg + '不可落在此处');
       }
     }
   }
+  //判断当前落子的棋子
+  currentHouse() {
+   var crruent = document.getElementById('currentHouse');
+   if(this.colorType){
+     crruent.innerHTML = '白棋'
+   }else{
+     crruent.innerHTML = '黑棋';
+   }
+  } 
   //本地ai对局
   localAI() {
     //当前需要落子的所以棋子位置集合
@@ -272,19 +383,20 @@ class Reversi {
    * 创建节点Ele节点
    * 8个方向节点创关联节点
    */
-  createLEle(x, y) {
+  createLEle(obj) {
     var Ele = document.createElement('span');
-    Ele.x = x;
-    Ele.y = y;
-    Ele.Nl = '';
-    Ele.Nr = '';
-    Ele.Nt = '';
-    Ele.Nb = '';
-    Ele.Nlt = '';
-    Ele.Nlb = '';
-    Ele.Nrt = '';
-    Ele.Nrb = '';
-    Ele.colorType = '';
+    Ele.x = obj.x;
+    Ele.y = obj.y;
+    Ele.colorType = obj.colorType || '';
+    Ele.Nl = obj.Nl || '';
+    Ele.Nr = obj.Nr || '';
+    Ele.Nt = obj.Nt || '';
+    Ele.Nb = obj.Nb || '';
+    Ele.Nlt = obj.Nlt || '';
+    Ele.Nlb = obj.Nlb || '';
+    Ele.Nrt = obj.Nrt || '';
+    Ele.Nrb = obj.Nrb || '';
+    Ele.className = obj.className || '';
     return Ele;
   }
   /**
