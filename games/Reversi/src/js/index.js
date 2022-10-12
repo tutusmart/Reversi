@@ -2,7 +2,7 @@
  * @Author: tuWei
  * @Date: 2022-02-05 23:46:58
  * @LastEditors: tuWei
- * @LastEditTime: 2022-10-11 21:33:36
+ * @LastEditTime: 2022-10-12 14:25:28
  */
 const R = new Reversi(),
   boxTop = document.querySelector('#box-top'),
