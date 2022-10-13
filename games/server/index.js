@@ -2,111 +2,104 @@
  * @Author: tuWei
  * @Date: 2022-10-11 18:18:18
  * @LastEditors: tuWei
- * @LastEditTime: 2022-10-13 00:06:00
+ * @LastEditTime: 2022-10-13 21:36:52
  */
 const http = require('http');
 
 const WebSocketServer = require('ws').Server,
-wss = new WebSocketServer({port: 9009});
+  wss = new WebSocketServer({ port: 9009 });
 const port = process.env.PORT || 3000;
 
+
+//对局缓存对象
 const matchmaking = {};
-
-/**
- * 返回值str参数说明
- * */
-// let str = {
-//   code: ’‘, 1表示建立连接，code表示落子， 3表示对局结束
-//   gameColor: client.gameColor, 表示当前client所属颜色
-//   msg: '正在等待对局连接...', 提示语
-//   colorType: client.colorType, 当前落子颜色
-//   doublePs: client.doublePs, 对局密码配置
-// }
-
-wss.on('connection', function(ws) {
-    ws.on('message', function(message) {
-      let mp = JSON.parse(message);
-      if(mp.code === 1 && !matchmaking.hasOwnProperty(mp.doublePs)){
-        ws.doublePs = mp.doublePs;
-        ws.gameColor = mp.gameColor;
-        ws.colorType = mp.colorType;
-        matchmaking[mp.doublePs] = [mp];
-        let str = {
-          code: 0,
-          gameColor: mp.gameColor,
-          msg: '正在等待对局连接...',
-          colorType: mp.colorType,
-          doublePs: mp.doublePs,
-        }
-        console.log('str1 ' + JSON.stringify(str));
+//ws监听方法
+wss.on('connection', function (ws) {
+  ws.on('message', function (message) {
+    let params = JSON.parse(message);
+    let str = {
+      code: 0, //1表示建立连接，2表示落子， 3表示对局结束
+      gameColor: params.gameColor, //对局密码配置
+      colorType: params.colorType, //当前落子颜色
+      doublePs: params.doublePs, //对局密码配置
+    }
+    console.log('params: ' + JSON.stringify(params));
+    if (params.code === 1) {
+      if (!matchmaking.hasOwnProperty(params.doublePs)) {
+        str.msg = '正在等待对局连接...';
+        ws.doublePs = params.doublePs;
+        ws.gameColor = params.gameColor;
+        ws.colorType = params.colorType;
+        matchmaking[params.doublePs] = [ws];
         ws.send(JSON.stringify(str));
         return
       }
-      if(mp.code === 1 && matchmaking.hasOwnProperty(mp.doublePs)) {
-        ws.doublePs = mp.doublePs;
-        if(ws.colorType === undefined){
-          ws.colorType = ws.colorType ? 0 : 1;
-        }
-        if(ws.gameColor === undefined ){
-          ws.gameColor = ws.gameColor ? 0 : 1;
-        }
-        let str = {
-          code: 1,
-          msg: '对局开始...',
-          doublePs: ws.doublePs,
-          colorType: ws.colorType,
-          gameColor: ws.gameColor,
-        }
-        ws.send(JSON.stringify(str));
+      if (matchmaking.hasOwnProperty(params.doublePs) && matchmaking[params.doublePs].length === 1) {
+        ws.doublePs = params.doublePs;
+        ws.gameColor = matchmaking[params.doublePs][0].gameColor ? 0 : 1;
+        ws.colorType = matchmaking[params.doublePs][0].colorType;
+        matchmaking[params.doublePs].push(ws);
+        str.msg = '对局开始...';
+        str.code = 1;
         wss.clients.forEach(function each(client) {
-          if(client.doublePs === mp.doublePs){
+          if (client.doublePs === params.doublePs) {
             str.colorType = client.colorType;
             str.gameColor = client.gameColor;
             client.send(JSON.stringify(str));
           }
         })
-      }
-      if(mp.code === 2){
-        let str = { 
-          code: 2, 
-          msg: '落子',  
-          x: mp.x,
-          y: mp.y,
-          colorType: ws.colorType,
-          gameColor: ws.gameColor,
-        }
+      } else if (matchmaking[params.doublePs].length > 1) {
+        str.code = 0;
+        str.msg = '您加入的对局已经开始，无法加入';
         ws.send(JSON.stringify(str));
-        wss.clients.forEach(function each(client) {
-          console.log(client.colorType,client.gameColor,client.doublePs, ws.doublePs);
-          if(client.doublePs === ws.doublePs){
-            str.colorType = client.colorType;
-            str.gameColor = client.gameColor;
-            client.send(JSON.stringify(str));
-          }
-        })
+        return
       }
-      if(mp.code === 3){
-        let str = { 
-          code: 2, 
-          msg: mp.msg,  
+    }
+    if (params.code === 2) {
+      str.code = 2;
+      str.msg = '落子';
+      str.x = params.x;
+      str.y = params.y;
+      wss.clients.forEach(function each(client) {
+        if (client.doublePs === ws.doublePs) {
+          str.colorType = params.colorType ? 0 : 1;
+          str.gameColor = client.gameColor;
+          client.send(JSON.stringify(str));
         }
-        ws.send(JSON.stringify(str));
-        wss.clients.forEach(function each(client) {
-          console.log(client.colorType,client.gameColor,client.doublePs, ws.doublePs);
-          if(client.doublePs === ws.doublePs){
-            client.send(JSON.stringify(str));
-          }
-        })
+      })
+    }
+    if (params.code === 3) {
+      let str = {
+        code: 2,
+        msg: params.msg,
       }
-      wss.on('close', function close(client) {
-        console.log('close', client);
-        clearInterval(interval);
-      });
-    });
+      wss.clients.forEach(function each(client) {
+        if (client.doublePs === ws.doublePs) {
+          client.send(JSON.stringify(str));
+          delete matchmaking[ws.doublePs];
+        }
+      })
+    }
+  });
+
+  //客户端关闭触发
+  ws.on('close', function close() {
+    if(ws.doublePs && matchmaking[ws.doublePs] && matchmaking[ws.doublePs].length > 0){
+      matchmaking[ws.doublePs].forEach((c)=>{
+        if(c !== ws){
+          c.send(JSON.stringify({
+            code: 3,
+            msg: '你的对手已逃跑，您赢得比赛',
+          }));
+        }   
+      })
+      delete matchmaking[ws.doublePs];
+    }
+  });
 });
 
 const server = http.createServer((req, res) => {
-  res.writeHead(200, {"Content-Type": 'text/plain'})
+  res.writeHead(200, { "Content-Type": 'text/plain' })
   res.end('Hello World!');
 });
 

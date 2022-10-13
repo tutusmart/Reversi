@@ -2,7 +2,7 @@
  * @Author: tuWei
  * @Date: 2022-02-06 00:10:14
  * @LastEditors: tuWei
- * @LastEditTime: 2022-10-12 13:13:09
+ * @LastEditTime: 2022-10-13 19:33:34
 -->
 <!DOCTYPE html>
 <html lang="en">
@@ -19,8 +19,9 @@
         <button class="reset_btn" onclick="startGame()">重开</button>
         <button class="reset_btn" onclick="openSet()">设置</button>
         <span>当前落子：</span> <span id="currentHouse"></span>
-        <span class="we">我方：</span> <span class="weText"></span>
-        <span></span>
+        <span class="weBox">
+          <span class="we">我方：</span> <span class="weText"></span>
+        </span>
       </div>
       <div id="app"></div>
     </div>
@@ -28,7 +29,7 @@
       <div class="setting-box">
         <div>
           <label>游戏模式：</label>
-          <select class="w200" onchange="changeTye()" name="3" id="g-type" value="3">
+          <select class="w200" onchange="changeTye()" name="3" id="g-type">
             <option value="0">自我娱乐</option>
             <option value="1">人机对战</option>
             <option value="2">与本地AI娱乐</option>

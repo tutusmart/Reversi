@@ -26,12 +26,16 @@ body {
   color: red;
   display: none;
 }
+.weBox{
+  display: none;
+}
 .we{
   margin-left: 6px;
 }
 .weText{
   margin-left: 6px;
-  color: red;
+  color: blue;
+  font-weight: bold;
 }
 #app {
   height: 100%;
